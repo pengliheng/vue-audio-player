@@ -36,10 +36,8 @@
                 </div>
                 <div class="ap-btn ap-btn-add">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-                        <g>
-                            <path d="M15.7,7H9V0.4C9,0.2,8.8,0,8.5,0h-1C7.2,0,7,0.2,7,0.4V7H0.4C0.2,7,0,7.2,0,7.5v1C0,8.8,0.2,9,0.4,9H7v6.6
-	C7,15.8,7.2,16,7.5,16h1C8.8,16,9,15.8,9,15.7V9h6.6C15.8,9,16,8.8,16,8.5v-1C16,7.2,15.8,7,15.7,7z"/>
-                        </g>
+                        <path d="M14.7,7H9V1.3C9,1.2,8.8,1,8.5,1h-1C7.3,1,7,1.2,7,1.3V7H1.3C1.2,7,1,7.2,1,7.5v1C1,8.8,1.2,9,1.3,9H7v5.5
+	c0,0.2,0.3,0.3,0.6,0.4h1C8.8,15,9,14.8,9,14.7V9h5.6C14.8,9,15,8.8,15,8.5V7.5C15,7.2,14.8,7,14.7,7z"/>
                     </svg>
                     <input multiple type="file" @change="addAudio">
                 </div>
@@ -47,9 +45,11 @@
         </div>
         <ul class="player-audio-list">
             <li class="player-audio-item" @click="play(audio)" v-for="audio in audioList">{{audio.name | rmExt}}
+
+
                 <div class="audio-info"><span
-                        class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
-                        class="audio-duration">{{audio.duration | toMinute}}</span></div>
+                    class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
+                    class="audio-duration">{{audio.duration | toMinute}}</span></div>
             </li>
         </ul>
     </div>
@@ -249,7 +249,7 @@
 
                     analyser.getByteFrequencyData(array);
 
-                    for (var i = 5; i < 32; i++) {
+                    for (var i = 5; i < 30; i++) {
                         var barHeight = array[i] * h / 255;
 
                         var blockCount = ~~(barHeight / (blockSide + blockVGap));
@@ -371,16 +371,20 @@
         margin-bottom 30px
 
     .ap-btn-bar
-        .ap-btn
-            fill rgba(#fff, 20%)
-            width 16px
-            height 16px
-            cursor pointer
-            margin 0 auto
+        text-align center
+        font-size 0
+
+    .ap-btn
+        display inline-block
+        fill rgba(#fff, 20%)
+        width 16px
+        height 16px
+        cursor pointer
+        line-height 1
+        margin 0 5px
 
     .ap-btn-add
         position relative
-        fill rgba(#fff, 100%)
         overflow hidden
         input
             position absolute
@@ -410,9 +414,9 @@
 
     .player-audio-item
         padding 10px
-        background #473845
+        background #423641
         &:nth-child(2n)
-            background #4C3E49
+            background #483a47
 
     .audio-info
         float right
