@@ -3,7 +3,7 @@
 
     <div class="audio-player">
         <div class="audio-freq">
-            <svg class="player-control" @click="switchStatus" xmlns="http://www.w3.org/2000/svg" version="1.1">
+            <svg class="player-control" @click="toggleState" xmlns="http://www.w3.org/2000/svg" version="1.1">
                 <circle class="player-progress-slot" cx="50%" cy="50%" r="48" stroke-width="2px"
                         stroke="rgba(255,255,255,.3)"></circle>
                 <circle class="player-progress-fill" transform="rotate(-90,50 50)" stroke-linecap="round"
@@ -24,6 +24,17 @@
         <div class="ap-mid">
             <div class="ap-playing-name">{{audioInfo.name | rmExt}}</div>
             <div class="ap-btn-bar">
+                <div class="ap-btn ap-btn-volume">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                              d="M1.2 5.2c-.6 0-1.2.4-1.2.9v3.7c0 .6.6 1 1.2 1H3l6.1 4V1.1L3 5.1H1.2zm10.8-3l-.4 1.2c1.8.6 3.3 2.5 3.3 4.6 0 2.1-1.4 4-3.3 4.7l.4 1.2c2.3-.9 4-3.2 4-5.8 0-2.8-1.7-5.1-4-5.9zM13.7 8c0-1.5-1-2.8-2.5-3.1l-.4 1.2c1 .1 1.8.9 1.8 1.9s-.8 1.8-1.7 1.8l.4 1.2c1.3-.2 2.4-1.5 2.4-3z"/>
+                    </svg>
+                </div>
+                <div class="ap-btn ap-btn-volume-silent">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                        <path d="M4.3,5C3.7,5,3,5.4,3,6V10c0,0.7,0.7,1.1,1.3,1.1h2l6.7,4.4v-15L6.3,4.9C6.3,4.9,4.3,5,4.3,5z"/>
+                    </svg>
+                </div>
                 <div class="ap-btn ap-btn-order">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
                         <path d="M14.9 1.6H1.1C.5 1.6 0 2.1 0 2.7v8.5c0 .6.5 1.1 1.1 1.1h2.7c.3 0 .5-.4.5-.5v-1.1c0-.1-.2-.5-.5-.5h-1c-.4 0-.6-.3-.6-.6V4.4c0-.4.3-.6.6-.6h10.4c.4 0 .6.3.6.6v5.1c0 .4-.3.6-.6.6H9.6V8l-3.7 3.2 3.7 3.2v-2.1h5.3c.6 0 1.1-.5 1.1-1.1V2.7c0-.6-.5-1.1-1.1-1.1z"/>
@@ -47,9 +58,30 @@
             <li class="player-audio-item" @click="play(audio)" v-for="audio in audioList">{{audio.name | rmExt}}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 <div class="audio-info"><span
-                    class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
-                    class="audio-duration">{{audio.duration | toMinute}}</span></div>
+                        class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
+                        class="audio-duration">{{audio.duration | toMinute}}</span></div>
             </li>
         </ul>
     </div>
@@ -116,7 +148,7 @@
     source.connect(audioCtx.destination);
     //source.start();
 
-    window.gainNode = audioCtx.createGain();
+    var gainNode = audioCtx.createGain();
     // 上面创建的唱片机需要连接音量控制器
     source.connect(gainNode);
     // 音量控制其又需要和扬声器连接起来
@@ -132,8 +164,6 @@
     analyser.connect(audioCtx.destination)
     var array = new Uint8Array(analyser.frequencyBinCount);
 
-    window.audioCtx = audioCtx;
-
 
     export default{
         name: 'vue-music',
@@ -146,7 +176,7 @@
                     stop: -1
                 },
                 audioInfo: {
-                    name: '',
+                    name: '点击 + 号添加本地音频',
                     duration: 0
                 },
                 playProgressRate: 0,
@@ -178,18 +208,33 @@
                 return `${m}:${s < 10 ? '0' + s : s}`;
             },
             rmExt(v){
-                return v.slice(0, v.lastIndexOf('.'));
+                var extStart = v.lastIndexOf('.');
+                return extStart > -1 ? v.slice(0, extStart) : v;
             }
         },
         methods: {
 
-            switchStatus(){
-                if (this.state == 1) {
-                    this.state = 0;
-                } else {
-                    this.play();
-                    this.state = 1;
+            getRandomIndex() {
+                return Math.floor(Math.random() * (this.audioList.length + 1));
+            },
+
+            toggleState(){
+
+                switch (this.state) {
+
+                    case this.stateMap.playing:
+                        this.state = this.stateMap.pause;
+                        source.stop(0);
+                        break;
+                    case this.stateMap.pause:
+                        break;
+                    case this.stateMap.stop:
+                        if (this.audioList.length > 0) {
+                            this.play(this.audioList[0]);
+                        }
+                        break;
                 }
+
             },
 
             // 计算播放进度
@@ -285,30 +330,9 @@
 
             },
             addAudio(evt){
-
-                /*  var me = this;
-                 var fr = new FileReader();
-
-                 fr.onload = function (e1) {
-                 //source.stop();
-                 var fileResult = e1.target.result; // ArrayBuffer
-                 audioCtx.decodeAudioData(fileResult, function (buffer) {
-                 // buffer 就是我们想要的AudioBuffer
-                 source.buffer = buffer;
-
-                 source.start();
-
-                 me.draw();
-                 }, function (e2) {
-                 // 失败了
-                 });
-                 };*/
-                // this.audioDetail.name= e.target.files[0].name;
-                //fr.readAsArrayBuffer(e.target.files[0]);
                 Array.prototype.forEach.call(evt.target.files, file => {
                     this.audioList.push(file);
                 })
-
             },
             play(audio){
                 var me = this;
@@ -327,6 +351,7 @@
                         me.playStartTime = audioCtx.currentTime;
                         me.audioInfo.duration = audio.duration = source.buffer.duration;
                         source.start();
+                        me.state = me.stateMap.playing;
                         me.draw();
                     }, function (e2) {
                         // 失败了
@@ -334,6 +359,8 @@
                 };
                 fileReader.readAsArrayBuffer(audio);
             }
+        },
+        mounted(){
         }
     }
 </script>
@@ -431,6 +458,7 @@
         margin-left -60px
         margin-top -60px
         padding: 10px
+        cursor pointer
 
     .player-progress-slot
     .player-progress-fill
