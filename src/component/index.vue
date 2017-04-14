@@ -1,6 +1,4 @@
-<template>
-
-
+<template type="text/html">
     <div class="audio-player">
         <div class="audio-freq">
             <svg class="player-control" @click="toggleState" xmlns="http://www.w3.org/2000/svg" version="1.1">
@@ -10,8 +8,8 @@
                         :stroke-dasharray="l"
                         :stroke-dashoffset="p" cx="50%" cy="50%" r="48" stroke-width="2px"
                         stroke="rgba(255,255,255,.8)"></circle>
-                <circle class="player-progress-dot" :cx="cx" :cy="cy" r="3"></circle>
-                <circle class="player-progress-dot1" :cx="cx" :cy="cy" r="6"></circle>
+                <circle class="player-progress-dot" v-show="state!=stateMap.stop" :cx="cx" :cy="cy" r="3"></circle>
+                <circle class="player-progress-dotbg" v-show="state!=stateMap.stop" :cx="cx" :cy="cy" r="6"></circle>
                 <polygon class="player-control-play" v-show="state<=0" points="42,36 64,50 42,64"></polygon>
                 <g class="player-control-pause" v-show="state>0">
                     <rect x="39" y="38" width="6" height="24"></rect>
@@ -55,24 +53,7 @@
             </div>
         </div>
         <ul class="player-audio-list">
-            <li class="player-audio-item" @click="play(audio)" v-for="audio in audioList">{{audio.name | rmExt}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            <li class="player-audio-item" @click="start(audio)" v-for="audio in audioList">{{audio.name | rmExt}}
 
 
 
@@ -143,27 +124,6 @@
 
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    var source = audioCtx.createBufferSource();
-    //source.buffer = myArrayBuffer;
-    source.connect(audioCtx.destination);
-    //source.start();
-
-    var gainNode = audioCtx.createGain();
-    // 上面创建的唱片机需要连接音量控制器
-    source.connect(gainNode);
-    // 音量控制其又需要和扬声器连接起来
-    gainNode.connect(audioCtx.destination);
-    // 音量大小修改
-    gainNode.gain.value = 1;
-
-
-    var analyser = audioCtx.createAnalyser();
-
-    analyser.fftSize = 64;
-    source.connect(analyser);
-    analyser.connect(audioCtx.destination)
-    var array = new Uint8Array(analyser.frequencyBinCount);
-
 
     export default{
         name: 'vue-music',
@@ -181,7 +141,7 @@
                 },
                 playProgressRate: 0,
                 playStartTime: 0,
-                audioList: []
+                audioList: [],
             }
         },
         computed: {
@@ -223,14 +183,14 @@
                 switch (this.state) {
 
                     case this.stateMap.playing:
-                        this.state = this.stateMap.pause;
-                        source.stop(0);
+                        this.pause();
                         break;
                     case this.stateMap.pause:
+                        this.play();
                         break;
                     case this.stateMap.stop:
                         if (this.audioList.length > 0) {
-                            this.play(this.audioList[0]);
+                            this.start(this.audioList[0]);
                         }
                         break;
                 }
@@ -292,10 +252,10 @@
                     ctx.clearRect(0, 0, w, h);
                     refCtx.clearRect(0, 0, w, h);
 
-                    analyser.getByteFrequencyData(array);
+                    me.analyser.getByteFrequencyData(me.array);
 
                     for (var i = 5; i < 30; i++) {
-                        var barHeight = array[i] * h / 255;
+                        var barHeight = me.array[i] * h / 255;
 
                         var blockCount = ~~(barHeight / (blockSide + blockVGap));
 
@@ -334,7 +294,41 @@
                     this.audioList.push(file);
                 })
             },
-            play(audio){
+            initAudio(){
+
+                var source = audioCtx.createBufferSource();
+                //source.buffer = myArrayBuffer;
+                source.connect(audioCtx.destination);
+                //source.start();
+
+                var gainNode = audioCtx.createGain();
+                // 上面创建的唱片机需要连接音量控制器
+                source.connect(gainNode);
+                // 音量控制其又需要和扬声器连接起来
+                gainNode.connect(audioCtx.destination);
+                // 音量大小修改
+                gainNode.gain.value = 1;
+
+
+                var analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 64;
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination)
+                this.analyser = analyser;
+                this.source = source;
+                this.array = new Uint8Array(analyser.frequencyBinCount);
+            },
+            play(){
+
+                var playedDuration = this.playProgressRate * this.audioInfo.duration;
+                this.initAudio();
+                this.source.buffer = this.audioInfo.buffer;
+                this.playStartTime = audioCtx.currentTime - playedDuration;
+                this.source.start(0, playedDuration);
+                this.state = this.stateMap.playing;
+            },
+            start(audio){
+                this.initAudio();
                 var me = this;
                 var fileReader = new FileReader();
 
@@ -343,14 +337,13 @@
                     var fileResult = evt.target.result; // ArrayBuffer
                     audioCtx.decodeAudioData(fileResult, function (buffer) {
                         // buffer 就是我们想要的AudioBuffer
-                        source.buffer = buffer;
+                        me.source.buffer = buffer;
 
-                        me.state = me.stateMap.playing;
+                        me.audioInfo.buffer = buffer;
                         me.audioInfo.name = audio.name;
-                        // 记录播放起始时间
+                        me.audioInfo.duration = audio.duration = buffer.duration;
+                        me.source.start();
                         me.playStartTime = audioCtx.currentTime;
-                        me.audioInfo.duration = audio.duration = source.buffer.duration;
-                        source.start();
                         me.state = me.stateMap.playing;
                         me.draw();
                     }, function (e2) {
@@ -358,7 +351,14 @@
                     });
                 };
                 fileReader.readAsArrayBuffer(audio);
+            },
+            pause(){
+                this.state = this.stateMap.pause;
+                this.source.stop(0);
             }
+        },
+        created(){
+
         },
         mounted(){
         }
@@ -467,7 +467,7 @@
     .player-progress-dot
         fill rgba(255, 255, 255, .8);
 
-    .player-progress-dot1
+    .player-progress-dotbg
         fill rgba(255, 255, 255, .2);
 
     .player-control-play
