@@ -60,6 +60,12 @@
 
 
 
+
+
+
+
+
+
                 <div class="audio-info"><span
                         class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
                         class="audio-duration">{{audio.duration | toMinute}}</span></div>
@@ -141,7 +147,7 @@
                 },
                 playProgressRate: 0,
                 playStartTime: 0,
-                audioList: [],
+                audioList: []
             }
         },
         computed: {
@@ -174,8 +180,12 @@
         },
         methods: {
 
-            getRandomIndex() {
-                return Math.floor(Math.random() * (this.audioList.length + 1));
+            initRandomList() {
+                var copyList = this.audioList.slice(0);
+                copyList.sort(() => {
+                    return 0.5 - Math.random();
+                });
+                this.randomList = copyList;
             },
 
             toggleState(){
@@ -292,7 +302,8 @@
             addAudio(evt){
                 Array.prototype.forEach.call(evt.target.files, file => {
                     this.audioList.push(file);
-                })
+                });
+                this.initRandomList();
             },
             initAudio(){
 
