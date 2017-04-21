@@ -16,11 +16,17 @@
                     <rect x="55" y="38" width="6" height="24"></rect>
                 </g>
             </svg>
-            <canvas class="music-canvas" ref="spectrum" width="300px" height="200px"></canvas>
-            <canvas class="music-canvas" ref="reflection" width="300px" height="200px"></canvas>
+            <canvas class="music-canvas" ref="frequency" width="300px" height="200px"></canvas>
+            <canvas class="music-canvas" ref="frequency_shadow" width="300px" height="200px"></canvas>
         </div>
         <div class="ap-mid">
             <div class="ap-playing-name">{{audioInfo.name | rmExt}}</div>
+            <div class="ap-curve">
+                <div class="ap-curve-progress" :style="{width:playProgressRate*300 +'px'}">
+                    <canvas ref="curve" width="300px" height="50px"></canvas>
+                </div>
+                <canvas ref="curve_full" width="300px" height="50px"></canvas>
+            </div>
             <div class="ap-btn-bar">
                 <div class="ap-btn ap-btn-volume">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
@@ -57,74 +63,12 @@
 
 
 
-
-
-
-
-
-
-
-
-
                 <div class="audio-info"><span
                         class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
                         class="audio-duration">{{audio.duration | toMinute}}</span></div>
             </li>
         </ul>
     </div>
-
-
-    <!--<div class="vui-player">
-           <div class="music">
-               <div class="album-box" v-el:album :class="albumCls">
-                   <div class="play" v-if="ready && showPlay" @click="play()"></div>
-                   <div class="pause" v-if="ready && showPause" @click="pause()"></div>
-                   <div class="album-cover" :style="{backgroundImage:'url('+playing_song.cover+')'}">
-                   </div>
-               </div>
-               <div class="music-info">
-                   <div class="music-name">
-                       <span v-if="ready">{{playing_song.name}}</span>
-                       <span v-if="!ready">Loading...</span>
-                   </div>
-                   <div class="music-author">
-                       <span v-if="ready">{{playing_song.singer}}</span>
-                   </div>
-                   <canvas v-el:melody width="240" height="30"></canvas>
-               </div>
-           </div>
-           <ul class="vui-player-control">
-               <li class="split"></li>
-               <li class="ctrl volume"><i></i></li>
-               <li class="ctrl volume-range" @click="changeVolume()"><em class="volume-move" v-el:volume></em></li>
-               <li class="split"></li>
-               <li class="ctrl play-list"><i @click="showPlayList()"></i>
-                   <div class="play-list-box" v-show="show_play_list">
-                       <table>
-                           <tr :class="{playing:playing_song.id==song.id}" v-for="song in play_list">
-                               <td>{{song.name}}</td>
-                               <td>{{song.singer}}</td>
-                               <td>{{song.duration}}</td>
-                               <td>
-                                   <div class="list-item-play" v-if="playing_song.id!=song.id"
-                                        @click="_loadSong(song,true)"></div>
-                               </td>
-                           </tr>
-                       </table>
-                   </div>
-               </li>
-               <li class="split"></li>
-           </ul>
-
-           <div class="vui-player-progress">
-               <div class="vui-player-bar" @click="move()">
-                   <canvas v-el:progress_full width="{{barWidth}}" height="100"></canvas>
-                   <div class="play-progress" v-el:progress>
-                       <canvas v-el:progress_current width="{{barWidth}}" height="100"></canvas>
-                   </div>
-               </div>
-           </div>
-       </div>-->
 </template>
 <script>
 
@@ -147,7 +91,8 @@
                 },
                 playProgressRate: 0,
                 playStartTime: 0,
-                audioList: []
+                audioList: [],
+                uid: 1
             }
         },
         computed: {
@@ -182,10 +127,12 @@
 
             initRandomList() {
                 var copyList = this.audioList.slice(0);
-                copyList.sort(() => {
-                    return 0.5 - Math.random();
-                });
-                this.randomList = copyList;
+                var rdmArr = [];
+                while (copyList.length > 0) {
+                    var rdmIdx = Math.floor(Math.random() * copyList.length);
+                    rdmArr.push(copyList.splice(rdmIdx, 1)[0]);
+                }
+                this.randomList = rdmArr;
             },
 
             toggleState(){
@@ -204,7 +151,6 @@
                         }
                         break;
                 }
-
             },
 
             // 计算播放进度
@@ -217,12 +163,83 @@
                 }
             },
 
-            draw(){
+            drawCurve(){
+                var me = this;
+                var getPeaks = function (length) {
+                    var sampleSize = me.audioInfo.buffer.length / length;
+                    var sampleStep = ~~(sampleSize / 10) || 1;
+                    var channels = me.audioInfo.buffer.numberOfChannels;
+                    var splitPeaks = [];
+                    var mergedPeaks = [];
+
+                    var mergedMaxPeak = 0;
+
+                    for (var c = 0; c < channels; c++) {
+                        var peaks = splitPeaks[c] = [];
+                        var chan = me.audioInfo.buffer.getChannelData(c);
+                        for (var i = 0; i < length; i++) {
+                            var start = ~~(i * sampleSize);
+                            var end = ~~(start + sampleSize);
+                            var max = 0;
+                            for (var j = start; j < end; j += sampleStep) {
+                                var value = chan[j];
+                                if (value > max) {
+                                    max = value;
+                                } else if (-value > max) {
+                                    max = -value;
+                                }
+                            }
+                            peaks[i] = max;
+
+                            if (c == 0 || max > mergedPeaks[i]) {
+                                mergedPeaks[i] = max;
+                                if (max > mergedMaxPeak) mergedMaxPeak = max;
+                            }
+                        }
+                    }
+
+                    return {
+                        mergedPeaks: mergedPeaks,
+                        splitPeaks: splitPeaks,
+                        mergedMaxPeak: mergedMaxPeak
+                    };
+                }
 
 
-                var canvas = this.$refs.spectrum;
+                var curve = me.$refs.curve;
+                var curveFull = me.$refs.curve_full;
 
-                var reflection = this.$refs.reflection;
+                var w = curve.width, h = curve.height;
+                var curveCtx = curve.getContext('2d');
+                var curveFullCtx = curveFull.getContext('2d');
+
+                curveFullCtx.fillStyle = '#51a4ad';
+                curveCtx.fillStyle = '#cc0';
+
+                var peakNos = ~~(w / 2);
+                var peak = getPeaks(peakNos);
+
+                curveCtx.clearRect(0, 0, w, h);
+                curveFullCtx.clearRect(0, 0, w, h);
+
+                var top = 10;
+
+                var part = ( h - top) / peak.mergedMaxPeak;
+
+
+                peak.mergedPeaks.forEach(function (item, i) {
+                    var barHeight = ~~(item * part);
+                    curveCtx.fillRect(i * 2, h - barHeight, 1, barHeight);
+                    curveFullCtx.fillRect(i * 2, h - barHeight, 1, barHeight);
+                })
+            },
+
+            drawFrequency(){
+
+
+                var canvas = this.$refs.frequency;
+
+                var reflection = this.$refs.frequency_shadow;
 
                 var w = canvas.width;
                 var h = canvas.height;
@@ -301,6 +318,8 @@
             },
             addAudio(evt){
                 Array.prototype.forEach.call(evt.target.files, file => {
+                    file.uid = this.uid;
+                    this.uid++;
                     this.audioList.push(file);
                 });
                 this.initRandomList();
@@ -308,18 +327,15 @@
             initAudio(){
 
                 var source = audioCtx.createBufferSource();
-                //source.buffer = myArrayBuffer;
                 source.connect(audioCtx.destination);
-                //source.start();
 
                 var gainNode = audioCtx.createGain();
                 // 上面创建的唱片机需要连接音量控制器
                 source.connect(gainNode);
-                // 音量控制其又需要和扬声器连接起来
+                // 音量控制和扬声器连接起来
                 gainNode.connect(audioCtx.destination);
-                // 音量大小修改
+                // 音量大小控制
                 gainNode.gain.value = 1;
-
 
                 var analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 64;
@@ -329,8 +345,8 @@
                 this.source = source;
                 this.array = new Uint8Array(analyser.frequencyBinCount);
             },
+            // 暂停状态下继续播放
             play(){
-
                 var playedDuration = this.playProgressRate * this.audioInfo.duration;
                 this.initAudio();
                 this.source.buffer = this.audioInfo.buffer;
@@ -338,40 +354,33 @@
                 this.source.start(0, playedDuration);
                 this.state = this.stateMap.playing;
             },
+            // 停止状态下开始播放
             start(audio){
                 this.initAudio();
                 var me = this;
                 var fileReader = new FileReader();
-
                 fileReader.onload = function (evt) {
-                    //source.stop();
-                    var fileResult = evt.target.result; // ArrayBuffer
+                    var fileResult = evt.target.result;
                     audioCtx.decodeAudioData(fileResult, function (buffer) {
-                        // buffer 就是我们想要的AudioBuffer
                         me.source.buffer = buffer;
-
                         me.audioInfo.buffer = buffer;
                         me.audioInfo.name = audio.name;
                         me.audioInfo.duration = audio.duration = buffer.duration;
                         me.source.start();
                         me.playStartTime = audioCtx.currentTime;
                         me.state = me.stateMap.playing;
-                        me.draw();
-                    }, function (e2) {
-                        // 失败了
+                        me.drawFrequency();
+                        me.drawCurve();
+                    }, function () {
                     });
                 };
                 fileReader.readAsArrayBuffer(audio);
             },
+            // 暂停播放
             pause(){
                 this.state = this.stateMap.pause;
                 this.source.stop(0);
             }
-        },
-        created(){
-
-        },
-        mounted(){
         }
     }
 </script>
@@ -434,6 +443,18 @@
             cursor pointer
             &::-webkit-file-upload-button
                 cursor pointer
+
+    .ap-curve
+        position relative
+        canvas
+            display block
+
+    .ap-curve-progress
+        position absolute
+        top 0
+        left 0
+        width 100%
+        overflow hidden
 
     .player-list
         position absolute
