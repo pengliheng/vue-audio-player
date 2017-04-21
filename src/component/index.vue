@@ -16,8 +16,8 @@
                     <rect x="55" y="38" width="6" height="24"></rect>
                 </g>
             </svg>
-            <canvas class="music-canvas" ref="frequency" width="300px" height="200px"></canvas>
-            <canvas class="music-canvas" ref="frequency_shadow" width="300px" height="200px"></canvas>
+            <canvas  ref="frequency" width="300px" height="200px"></canvas>
+            <canvas   ref="frequency_shadow" width="300px" height="200px"></canvas>
         </div>
         <div class="ap-mid">
             <div class="ap-playing-name">{{audioInfo.name | rmExt}}</div>
@@ -396,6 +396,8 @@
         height 100%
         box-shadow rgba(0, 0, 0, .5) 0 0 50px
         background #483A47
+        canvas
+            display block
 
     .audio-freq
         position relative
@@ -446,8 +448,6 @@
 
     .ap-curve
         position relative
-        canvas
-            display block
 
     .ap-curve-progress
         position absolute
@@ -505,9 +505,6 @@
     .player-control-play
     .player-control-pause
         fill rgba(255, 255, 255, .5)
-
-    .music-canvas
-        display block
 
 
 </style>
