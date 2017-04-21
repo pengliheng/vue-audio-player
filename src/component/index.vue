@@ -222,7 +222,7 @@
                 curveCtx.clearRect(0, 0, w, h);
                 curveFullCtx.clearRect(0, 0, w, h);
 
-                var top = 10;
+                var top = 0;
 
                 var part = ( h - top) / peak.mergedMaxPeak;
 
