@@ -483,7 +483,7 @@
         z-index 1
 
     .ap-list-head
-        padding 15px 0
+        padding 15px
 
     .ap-list-box
         margin: 0
