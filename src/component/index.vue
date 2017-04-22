@@ -23,9 +23,9 @@
             <div class="ap-playing-name">{{audioInfo.name | rmExt}}</div>
             <div class="ap-curve">
                 <div class="ap-curve-progress" :style="{width:playProgressRate*300 +'px'}">
-                    <canvas ref="curve" width="300px" height="50px"></canvas>
+                    <canvas ref="curve" width="300px" height="30px"></canvas>
                 </div>
-                <canvas ref="curve_full" width="300px" height="50px"></canvas>
+                <canvas ref="curve_full" width="300px" height="30px"></canvas>
             </div>
             <div class="ap-btn-bar">
                 <div class="ap-btn ap-btn-volume">
@@ -49,6 +49,12 @@
                         <path d="M.5 5.3h3.2l1.1 1.6L6.1 5l-1-1.5c-.3-.3-.7-.3-.9-.3H.5c-.3 0-.5.2-.5.5v1.1c0 .3.2.5.5.5zm11.8 5.4H10L8.9 9.1 7.6 11l1 1.4c.3.4.5.4 1.1.4h2.7v2.1l3.7-3.2-3.7-3.2v2.2zm0-5.4v2.1L16 4.3l-3.7-3.2v2.1H9.6c-.9 0-.9.2-1 .3l-4.9 7.2H.5c-.3 0-.5.2-.5.5v1.1c0 .3.2.5.5.5h3.7c.2 0 .6 0 .7-.2l5-7.2h2.4z"/>
                     </svg>
                 </div>
+
+            </div>
+        </div>
+        <div class="ap-list">
+
+            <div class="ap-list-head">
                 <div class="ap-btn ap-btn-add">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
                         <path d="M14.7,7H9V1.3C9,1.2,8.8,1,8.5,1h-1C7.3,1,7,1.2,7,1.3V7H1.3C1.2,7,1,7.2,1,7.5v1C1,8.8,1.2,9,1.3,9H7v5.5
@@ -57,17 +63,16 @@
                     <input multiple type="file" @change="addAudio">
                 </div>
             </div>
-        </div>
-        <ul class="player-audio-list">
-            <li class="player-audio-item" @click="start(audio)" v-for="audio in audioList">{{audio.name | rmExt}}
-
-
+            <ul class="ap-list-box">
+                <li class="ap-list-item" @click="start(audio)" v-for="audio in audioList">{{audio.name | rmExt}}
 
                 <div class="audio-info"><span
                         class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
                         class="audio-duration">{{audio.duration | toMinute}}</span></div>
-            </li>
-        </ul>
+                </li>
+            </ul>
+        </div>
+
     </div>
 </template>
 <script>
@@ -213,24 +218,24 @@
                 var curveCtx = curve.getContext('2d');
                 var curveFullCtx = curveFull.getContext('2d');
 
-                curveFullCtx.fillStyle = '#51a4ad';
-                curveCtx.fillStyle = '#cc0';
 
-                var peakNos = ~~(w / 2);
+                curveFullCtx.fillStyle = 'rgba(81, 164, 173,.3)';
+                curveCtx.fillStyle = 'rgba(204, 204, 0,.4)';
+
+                var peakNos = ~~(w / 1);
                 var peak = getPeaks(peakNos);
 
                 curveCtx.clearRect(0, 0, w, h);
                 curveFullCtx.clearRect(0, 0, w, h);
 
-                var top = 0;
 
-                var part = ( h - top) / peak.mergedMaxPeak;
+                var part = h / peak.mergedMaxPeak;
 
 
                 peak.mergedPeaks.forEach(function (item, i) {
                     var barHeight = ~~(item * part);
-                    curveCtx.fillRect(i * 2, h - barHeight, 1, barHeight);
-                    curveFullCtx.fillRect(i * 2, h - barHeight, 1, barHeight);
+                    curveCtx.fillRect(i *1, h - barHeight, 1, barHeight);
+                    curveFullCtx.fillRect(i *1, h - barHeight, 1, barHeight);
                 })
             },
 
@@ -417,11 +422,11 @@
         color rgba(255, 193, 208, .95)
         text-align: center
         font-size 12px
-        margin-bottom 30px
 
     .ap-btn-bar
         text-align center
         font-size 0
+        display none
 
     .ap-btn
         display inline-block
@@ -448,6 +453,8 @@
 
     .ap-curve
         position relative
+        background: rgba(0,0,0,.05)
+        margin 20px 0
 
     .ap-curve-progress
         position absolute
@@ -464,14 +471,25 @@
         width 200px
         background rgba(#000, 80%)
 
-    .player-audio-list
+    .ap-list
+        position absolute
+        left 0
+        top 0
+        width 80%
+        height 100%
+        font-size: 12px
+        color rgba(#fff, 50%);
+        background linear-gradient(145deg,#3a2e39,#573d4c,#3a2e39)
+        z-index 1
+
+    .ap-list-head
+        padding 15px 0
+
+    .ap-list-box
         margin: 0
         padding: 0
         list-style none
-        font-size: 12px
-        color rgba(#fff, 50%);
-
-    .player-audio-item
+    .ap-list-item
         padding 10px
         background #423641
         &:nth-child(2n)
