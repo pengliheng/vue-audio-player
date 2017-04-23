@@ -474,13 +474,14 @@
     .ap-list
         position absolute
         left 0
-        top 0
-        width 80%
-        height 100%
-        font-size: 12px
-        color rgba(#fff, 50%);
+        bottom 0
+        width 100%
+        height 80%
+        font-size 12px
+        color rgba(#fff, 50%)
         background linear-gradient(145deg,#3a2e39,#573d4c,#3a2e39)
         z-index 1
+        box-shadow rgba(0,0,0,.2) 0 -20px 20px
 
     .ap-list-head
         padding 15px
