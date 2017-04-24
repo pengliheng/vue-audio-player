@@ -1,6 +1,6 @@
 <template>
     <div class="demo">
-        <vue-music style="width: 300px;height: 600px;margin: 100px auto;"></vue-music>
+        <vue-music ></vue-music>
     </div>
 </template>
 <script>

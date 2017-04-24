@@ -50,7 +50,7 @@
                     </svg>
                 </div>
 
-                <div class="ap-btn" @click="show_list=true">
+                <div class="ap-btn" @click="list_visible=true">
                     <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
                         <path d="M133.31 296.552h757.207c19.782 0 35.951-16.169 35.951-35.95 0-19.782-15.997-35.952-35.95-35.952H133.31c-19.782 0-35.951 16.17-35.951 35.951 0 19.782 16.17 35.951 35.95 35.951zM890.517 476.135H133.311c-19.782 0-35.951 16.17-35.951 35.951 0 19.782 16.17 35.951 35.95 35.951h757.207c19.782 0 35.951-16.17 35.951-35.951 0-19.782-16.17-35.95-35.95-35.95zM890.517 727.448H133.311c-19.782 0-35.951 15.997-35.951 35.95s16.17 35.952 35.95 35.952h757.207c19.782 0 35.951-15.998 35.951-35.951s-16.17-35.951-35.95-35.951z"/>
                     </svg>
@@ -58,7 +58,7 @@
             </div>
         </div>
         <transition name="fade">
-        <div class="ap-list" v-show="show_list">
+        <div class="ap-list" v-show="list_visible">
 
             <div class="ap-list-head">
                 <div class="ap-btn ap-btn-add">
@@ -68,7 +68,7 @@
                     </svg>
                     <input multiple type="file" @change="addAudio">
                 </div>
-                <div class="ap-btn" @click="show_list=false">
+                <div class="ap-btn" @click="list_visible=false">
                     <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
                         <path d="M890.335 330.911c-12.576-12.416-32.8-12.353-45.248.193L517.248 661.95 184.832 332.513c-12.576-12.448-32.8-12.353-45.28.192-12.448 12.577-12.354 32.832.192 45.281l353.311 350.112c.544.544 1.248.673 1.793 1.184.127.127.16.287.287.416a31.972 31.972 0 0 0 22.528 9.28c8.224 0 16.48-3.168 22.72-9.47l350.112-353.313c12.48-12.58 12.386-32.835-.16-45.284z"/>
                     </svg>
@@ -108,7 +108,7 @@
                 playStartTime: 0,
                 audioList: [],
                 uid: 1,
-                show_list:false
+                list_visible:false
             }
         },
         computed: {
@@ -537,7 +537,7 @@
         fill rgba(255, 255, 255, .5)
 
     .fade-enter-active, .fade-leave-active {
-        transition: bottom .5s
+        transition: bottom .2s
     }
     .fade-leave-active,
     .fade-enter {
