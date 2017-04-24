@@ -16,8 +16,8 @@
                     <rect x="55" y="38" width="6" height="24"></rect>
                 </g>
             </svg>
-            <canvas  ref="frequency" width="300px" height="200px"></canvas>
-            <canvas   ref="frequency_shadow" width="300px" height="200px"></canvas>
+            <canvas ref="frequency" width="300px" height="200px"></canvas>
+            <canvas ref="frequency_shadow" width="300px" height="200px"></canvas>
         </div>
         <div class="ap-mid">
             <div class="ap-playing-name">{{audioInfo.name | rmExt}}</div>
@@ -50,9 +50,15 @@
                     </svg>
                 </div>
 
+                <div class="ap-btn" @click="show_list=true">
+                    <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M133.31 296.552h757.207c19.782 0 35.951-16.169 35.951-35.95 0-19.782-15.997-35.952-35.95-35.952H133.31c-19.782 0-35.951 16.17-35.951 35.951 0 19.782 16.17 35.951 35.95 35.951zM890.517 476.135H133.311c-19.782 0-35.951 16.17-35.951 35.951 0 19.782 16.17 35.951 35.95 35.951h757.207c19.782 0 35.951-16.17 35.951-35.951 0-19.782-16.17-35.95-35.95-35.95zM890.517 727.448H133.311c-19.782 0-35.951 15.997-35.951 35.95s16.17 35.952 35.95 35.952h757.207c19.782 0 35.951-15.998 35.951-35.951s-16.17-35.951-35.95-35.951z"/>
+                    </svg>
+                </div>
             </div>
         </div>
-        <div class="ap-list">
+        <transition name="fade">
+        <div class="ap-list" v-show="show_list">
 
             <div class="ap-list-head">
                 <div class="ap-btn ap-btn-add">
@@ -62,17 +68,21 @@
                     </svg>
                     <input multiple type="file" @change="addAudio">
                 </div>
+                <div class="ap-btn" @click="show_list=false">
+                    <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M890.335 330.911c-12.576-12.416-32.8-12.353-45.248.193L517.248 661.95 184.832 332.513c-12.576-12.448-32.8-12.353-45.28.192-12.448 12.577-12.354 32.832.192 45.281l353.311 350.112c.544.544 1.248.673 1.793 1.184.127.127.16.287.287.416a31.972 31.972 0 0 0 22.528 9.28c8.224 0 16.48-3.168 22.72-9.47l350.112-353.313c12.48-12.58 12.386-32.835-.16-45.284z"/>
+                    </svg>
+                </div>
             </div>
             <ul class="ap-list-box">
                 <li class="ap-list-item" @click="start(audio)" v-for="audio in audioList">{{audio.name | rmExt}}
-
-                <div class="audio-info"><span
-                        class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
-                        class="audio-duration">{{audio.duration | toMinute}}</span></div>
+                    <div class="audio-info"><span
+                            class="audio-played-time">{{playProgressRate * audioInfo.duration | toMinute}} / </span><span
+                            class="audio-duration">{{audio.duration | toMinute}}</span></div>
                 </li>
             </ul>
         </div>
-
+        </transition>
     </div>
 </template>
 <script>
@@ -97,7 +107,8 @@
                 playProgressRate: 0,
                 playStartTime: 0,
                 audioList: [],
-                uid: 1
+                uid: 1,
+                show_list:false
             }
         },
         computed: {
@@ -234,8 +245,8 @@
 
                 peak.mergedPeaks.forEach(function (item, i) {
                     var barHeight = ~~(item * part);
-                    curveCtx.fillRect(i *1, h - barHeight, 1, barHeight);
-                    curveFullCtx.fillRect(i *1, h - barHeight, 1, barHeight);
+                    curveCtx.fillRect(i * 1, h - barHeight, 1, barHeight);
+                    curveFullCtx.fillRect(i * 1, h - barHeight, 1, barHeight);
                 })
             },
 
@@ -401,6 +412,7 @@
         height 100%
         box-shadow rgba(0, 0, 0, .5) 0 0 50px
         background #483A47
+        overflow hidden
         canvas
             display block
 
@@ -426,7 +438,6 @@
     .ap-btn-bar
         text-align center
         font-size 0
-        display none
 
     .ap-btn
         display inline-block
@@ -453,7 +464,7 @@
 
     .ap-curve
         position relative
-        background: rgba(0,0,0,.05)
+        background: rgba(0, 0, 0, .05)
         margin 20px 0
 
     .ap-curve-progress
@@ -479,9 +490,8 @@
         height 80%
         font-size 12px
         color rgba(#fff, 50%)
-        background linear-gradient(145deg,#3a2e39,#573d4c,#3a2e39)
+        background linear-gradient(145deg, #3a2e39, #573d4c, #3a2e39)
         z-index 1
-        box-shadow rgba(0,0,0,.2) 0 -20px 20px
 
     .ap-list-head
         padding 15px
@@ -490,6 +500,7 @@
         margin: 0
         padding: 0
         list-style none
+
     .ap-list-item
         padding 10px
         background #423641
@@ -524,6 +535,14 @@
     .player-control-play
     .player-control-pause
         fill rgba(255, 255, 255, .5)
+
+    .fade-enter-active, .fade-leave-active {
+        transition: bottom .5s
+    }
+    .fade-leave-active,
+    .fade-enter {
+        bottom -80%
+    }
 
 
 </style>
